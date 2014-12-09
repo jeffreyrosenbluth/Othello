@@ -11,6 +11,7 @@ To do
 - [X] Two player mode
 - [X] Suggest move button
 - [X] Heuristic
+- [ ] Comment and document the source code
 - [ ] Show number of squares each player has
 - [ ] Add module to test the AI
 - [ ] Move syle info to static/css instead of inline
