@@ -17,7 +17,6 @@ import           Graphics.UI.Threepenny.Core hiding (on)
 ----------------------------------------------------------------------
 -- GUI
 ----------------------------------------------------------------------
-
 main :: IO ()
 main = do
   currentDirectory <- getCurrentDirectory
