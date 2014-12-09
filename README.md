@@ -4,6 +4,18 @@ Othello
 Threepenny-gui example of Othello
 -------------------------------------
 
+To do
+-----
+
+- [X] Threepenny-gui / FRP gui is working
+- [X] Two player mode
+- [X] Suggest move button
+- [X] Heuristic
+- [ ] Add module to test the AI
+- [ ] Move syle info to static/css instead of inline
+- [ ] Add minimax or negamax search
+- [ ] Add alph-beta pruning
+
 To run
 ------
 
