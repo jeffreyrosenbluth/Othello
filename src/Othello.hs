@@ -123,14 +123,17 @@ setup window = void $ do
       eAI :: Event Game
       eAI = bState <@ eAIclick
 
-  bAI <- stepper "" (nextMove <$> eAI)
+  bAI <- stepper "Hint" (nextMove <$> eAI)
   sink UI.text bAI (element ai)
 
   getBody window #+ [ column
                       [ UI.h1 #+ [string "Othello"]
                       , grid (chunksOf 8 uiCells) # set UI.style [("line-height", "0")]
                       , UI.div #+ [element notification] # set UI.class_ "notification"
-                      , element ai
+                      , element ai # set UI.style [ ("font", "bold 24px Optima")
+                                                  , ("background-color", "#DDDDDD")
+                                                  , ("color", "darkred")
+                                                  , ("margin", "0 auto") ]
                       ] # set UI.style [("background-color","#DDDDDD")
                                        ,("text-align","center")
                                        ,("font-family","Optima, Arial, Helvetica, sans-serif")
