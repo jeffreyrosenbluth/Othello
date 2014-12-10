@@ -29,5 +29,6 @@ To test
 ------
 
   - $ cabal install --enable-tests
-  - $ cabal test (or cabal repl tests, *Main> main)
+  - $ cabal repl tests
+  - *Main> main
 
