@@ -22,5 +22,5 @@ To run
 ------
 
   - $ cabal build
-  - $ ./dist/build/Othello/othello
+  - $ ./dist/build/othello/othello
   - point browser at localhost:8023

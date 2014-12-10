@@ -22,7 +22,6 @@ main = do
   currentDirectory <- getCurrentDirectory
   let static = currentDirectory ++ "/static"
   startGUI defaultConfig { tpStatic = Just static } setup
-  -- print . findWinner . board $ playGame 0 newGame
 
 getPieceUrl :: Piece -> FilePath
 getPieceUrl Empty = "static/images/tile.png"

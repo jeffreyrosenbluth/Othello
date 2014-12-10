@@ -27,25 +27,12 @@ chooseMove g = move (snd best)
     scored = map (\(h, s) -> (heuristic h, s)) candidates
     best = maximumBy (compare `on` fst) scored
 
--- For debugging
 nextMove :: Game -> String
 nextMove g = show $ (\(x, y) -> (x, 9 - y)) (snd best)
   where
     candidates = legalMoves g
     scored = map (\(h, s) -> (heuristic h, s)) candidates
     best = maximumBy (compare `on` fst) scored
-
-randMove :: Game -> Move
-randMove g = move square
-  where
-    square = head . legalSquares $ g
-    
-playGame :: Int -> Game -> Game
-playGame n g@(Game _ b)
-  | isOver b = g
-  | odd n = playGame (n+1) (chooseMove g g)
-  | even n = playGame (n+1) (randMove g g)
-  | otherwise = error "This is just for GHC, cannot be reached"
 
 --------------------------------------------------------------------------------------
 -- Heuristic, based on:
