@@ -13,7 +13,7 @@ To do
 - [X] Heuristic
 - [ ] Comment and document the source code
 - [ ] Show number of squares each player has
-- [ ] Add module to test the AI
+- [X] Add module to test the AI
 - [ ] Move syle info to static/css instead of inline
 - [ ] Add minimax or negamax search
 - [ ] Add alph-beta pruning
@@ -24,3 +24,10 @@ To run
   - $ cabal build
   - $ ./dist/build/othello/othello
   - point browser at localhost:8023
+
+To test
+------
+
+  - $ cabal install --enable-tests
+  - $ cabal test (or cabal repl tests, *Main> main)
+
