@@ -95,9 +95,10 @@ mmNextMove n g@(Game p _) = show $ (\(x, y) -> (x, 9 - y)) (snd best)
 abNextMove :: Int -> Game -> String
 abNextMove n g@(Game p _) = show $ (\(x, y) -> (x, 9 - y)) (snd best)
   where
+    r = if even n then p else opposite p
     gt = cutoff n . gameTree
     ms = legalMoves g
-    scores = map (\(g', s) -> (alphaBeta p . gt $ g', s)) ms
+    scores = map (\(g', s) -> (alphaBeta r . gt $ g', s)) ms
     best = maximumBy (compare `on` fst) scores
 --------------------------------------------------------------------------------------
 -- Heuristic, based on:
