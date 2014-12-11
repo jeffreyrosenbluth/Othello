@@ -122,7 +122,7 @@ setup window = void $ do
       eAI :: Event Game
       eAI = bState <@ eAIclick
 
-  bAI <- stepper "Hint" (nextMove <$> eAI)
+  bAI <- stepper "Hint" (mmNextMove 4 <$> eAI)
   sink UI.text bAI (element ai)
 
   getBody window #+ [ column

@@ -24,15 +24,15 @@ playGame n g = do
   if isOver b
   then g
   else if odd n
-       then playGame (n + 1) (return $ (chooseMove g' g'))
+       then playGame (n + 1) (return $ (mmChooseMove 2 g' g'))
        else do
          m <- randMove g'
          playGame (n + 1) (return $ m g')
 
 main :: IO ()
 main = do
-  gs <- forM [1..100] $ \_ -> evalRandIO $ playGame 1 (return newGame)
-  hs <- forM [1..100] $ \_ -> evalRandIO $ playGame 0 (return newGame)
+  gs <- forM [1..10] $ \_ -> evalRandIO $ playGame 1 (return newGame)
+  hs <- forM [1..10] $ \_ -> evalRandIO $ playGame 0 (return newGame)
   let resultsB = map (findWinner . board) gs
       blackWins = sum $ map (oneIfEq Black) resultsB
       resultsW = map (findWinner . board) hs

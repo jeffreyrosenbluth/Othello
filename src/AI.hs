@@ -8,7 +8,8 @@ import Game
 
 import Data.Array
 import Data.Function (on)
-import Data.List (maximumBy)
+import Data.List (maximumBy, foldl')
+import Data.Tree
 --------------------------------------------------------------------------------------
 
 legalSquares :: Game -> [Square]
@@ -20,19 +21,70 @@ legalMoves g@(Game p b) = zip gs ls
     ls = filter (isLegal b p) squares
     gs = map (flip move g) ls
 
+children :: Game -> [Game]
+children g@(Game p b) = map (flip move g) (filter (isLegal b p) squares)
+
 chooseMove :: Game -> Move
 chooseMove g = move (snd best)
   where
     candidates = legalMoves g
-    scored = map (\(h, s) -> (heuristic h, s)) candidates
+    scored = map (\((Game p' b'), s) -> (heuristic b' p', s)) candidates
     best = maximumBy (compare `on` fst) scored
 
 nextMove :: Game -> String
 nextMove g = show $ (\(x, y) -> (x, 9 - y)) (snd best)
   where
     candidates = legalMoves g
-    scored = map (\(h, s) -> (heuristic h, s)) candidates
+    scored = map (\((Game p' b'), s) -> (heuristic b' p', s)) candidates
     best = maximumBy (compare `on` fst) scored
+
+--------------------------------------------------------------------------------------
+-- Minimax
+--------------------------------------------------------------------------------------
+type GameTree = Tree Game
+
+minimax :: Piece -> GameTree -> Double
+minimax q (Node g []) = heuristic (board g) q
+minimax q (Node (Game p _) xs)
+  | p == q = maximum (map (minimax q) xs)
+  | otherwise = minimum (map (minimax q) xs)
+
+
+-- XXX Does not seem to be working properly.
+-- Inferior play without speed gain.
+alphaBeta :: Piece -> GameTree -> Double
+alphaBeta p gt = alphaBeta' (-1/0) (1/0) p gt
+
+alphaBeta' :: Double -> Double -> Piece -> GameTree -> Double
+alphaBeta' _ _ p (Node g []) = heuristic (board g) p
+alphaBeta' a b p (Node _ gs) = fst $ foldl' sub (a, b) gs
+  where
+    sub (a', b') n
+      | a' >= b' = (a', b')
+      | otherwise = (max a (- alphaBeta' (-b') (-a) p n), b)
+
+gameTree :: Game -> GameTree
+gameTree g = Node g (map gameTree (children g))
+
+cutoff :: Int -> GameTree -> GameTree
+cutoff 0 (Node g _) = Node g []
+cutoff n (Node g gs) = Node g (map (cutoff (n - 1)) gs)
+
+mmChooseMove :: Int -> Game -> Move
+mmChooseMove n g@(Game p _) = move (snd best)
+  where
+    gt = cutoff n . gameTree
+    ms = legalMoves g
+    scores = map (\(g', s) -> (alphaBeta p . gt $ g', s)) ms
+    best = maximumBy (compare `on` fst) scores
+
+mmNextMove :: Int -> Game -> String
+mmNextMove n g@(Game p _) = show $ (\(x, y) -> (x, 9 - y)) (snd best)
+  where
+    gt = cutoff n . gameTree
+    ms = legalMoves g
+    scores = map (\(g', s) -> (minimax p . gt $ g', s)) ms
+    best = maximumBy (compare `on` fst) scores
 
 --------------------------------------------------------------------------------------
 -- Heuristic, based on:
@@ -42,29 +94,29 @@ nextMove g = show $ (\(x, y) -> (x, 9 - y)) (snd best)
 -- Assing a score to a board based on the subsequent criteria.
 -- See:
 -- http://courses.cs.washington.edu/courses/cse573/04au/Project/mini1/RUSSIA/Final_Paper.pdf
-heuristic :: Game -> Double
-heuristic g =  10.0   * parity g
-            + 801.724 * cornerOcc g
-            + 382.026 * cornerAdj g
-            +  78.922 * mobility g
-            +  74.396 * stability g
-            +  10.0   * squareValues g  
+heuristic :: Board -> Piece -> Double
+heuristic b p =  10.0   * parity b p
+              + 801.724 * cornerOcc b p
+              + 382.026 * cornerAdj b p
+              +  78.922 * mobility b p
+              +  74.396 * stability b p
+              +  10.0   * squareValues b p
   
 oneIfEq :: Eq a => a -> a -> Double
 oneIfEq p q = if p == q then 1 else 0
                 
 -- Value for occupying more squares.
-parity :: Game -> Double
-parity (Game p b)
-  | me  > you =  100 * me  / total
-  | you > me  = -100 * you / total
+parity :: Board -> Piece -> Double
+parity b p
+  | sup  > inf =  100 * sup / total
+  | inf > sup  = -100 * inf / total
   | otherwise = 0
   where
     ps = elems b
-    mes = map (oneIfEq (opposite p)) ps
-    yous = map (oneIfEq p) ps
-    (me, you) = (sum mes, sum yous)
-    total = me + you
+    sups = map (oneIfEq p) ps
+    infs = map (oneIfEq (opposite p)) ps
+    (sup, inf) = (sum sups, sum infs)
+    total = sup + inf
 
 -- Values for occupying specific squares.
 valueTable :: Array Square Double
@@ -87,8 +139,8 @@ squareValue b p s
   where
     q = b ! s
               
-squareValues :: Game -> Double
-squareValues (Game p b) = sum $ map (squareValue b (opposite p)) squares
+squareValues :: Board -> Piece -> Double
+squareValues b p = sum $ map (squareValue b p) squares
 
 -- Index offsets to 8 adjacent squares.
 frontierX :: Array Int Int
@@ -107,16 +159,16 @@ stable b p s
     sqs = [(i + frontierX ! k, j + frontierY ! k) | k <- [1..8]] 
     goodSqs = filter (\(x, y) -> x >= 1 && x <= 8 && y >= 1 && y <= 8) sqs
 
-stability :: Game -> Double
-stability (Game p b)
-  | me  > you = -100 * me  / total
-  | you > me  =  100 * you / total
+stability :: Board -> Piece -> Double
+stability b p
+  | sup  > inf = -100 * sup  / total
+  | inf > sup  =  100 * inf / total
   | otherwise = 0
   where
-    mes    = map (stable b (opposite p)) squares
-    yous   = map (stable b p)            squares
-    (me, you) = (sum mes, sum yous)
-    total = me + you
+    sups       = map (stable b p) squares
+    infs       = map (stable b (opposite p)) squares
+    (sup, inf) = (sum sups, sum infs)
+    total      = sup + sup
     
 unitVal :: Piece -> Piece -> Double
 unitVal p q
@@ -125,15 +177,15 @@ unitVal p q
   | otherwise = 0
 
 -- Occupying a corner is very good.
-cornerOcc :: Game -> Double
-cornerOcc (Game p b) = (25 *) . sum $ map (unitVal (opposite p)) corners
+cornerOcc :: Board -> Piece -> Double
+cornerOcc b p = (25 *) . sum $ map (unitVal p) corners
   where
     corners = [b ! (1,1), b ! (1,8), b ! (8,1), b ! (8,8)]
 
 -- Occupying a square adjacent to a corner is bad.
-cornerAdj :: Game -> Double
-cornerAdj (Game p b) = ((-12.5) *) . sum
-                     $ map (unitVal (opposite p)) (concat [ll, lr, tr, tl])
+cornerAdj :: Board -> Piece -> Double
+cornerAdj b p = ((-12.5) *) . sum
+                     $ map (unitVal p) (concat [ll, lr, tr, tl])
   where
     ll = if b ! (1,1) == Empty
          then [b ! (1,2), b ! (2,2), b ! (2,1)]
@@ -149,13 +201,14 @@ cornerAdj (Game p b) = ((-12.5) *) . sum
          else []
 
 -- Measures how many move choice you have relative to your opponent.
-mobility :: Game -> Double
-mobility g
-  | me > you = 100 * me / total
-  | you > me = -100 * you / total
+mobility :: Board -> Piece -> Double
+mobility b p
+  | sup > inf = 100 * sup / total
+  | inf > sup = -100 * inf / total
   | otherwise = 0
   where
-    you = fromIntegral . length $ (legalSquares g)
-    me = fromIntegral . length $ (legalSquares h)
+    sup  = fromIntegral . length $ (legalSquares g)
+    inf = fromIntegral . length $ (legalSquares h)
+    g = Game p b
     h = g { piece = opposite (piece g) }
-    total = me + you
+    total = sup + inf
