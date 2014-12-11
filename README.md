@@ -17,6 +17,8 @@ To do
 - [ ] Move syle info to static/css instead of inline
 - [X] Add minimax or negamax search
 - [X] Add alph-beta pruning
+- [ ] Order legal moves for better alpha-beta pruning
+- [ ] Parallelize computations (maybe Repa?).
 
 To run
 ------
