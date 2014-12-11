@@ -12,17 +12,31 @@ import Data.List (maximumBy, foldl')
 import Data.Tree
 --------------------------------------------------------------------------------------
 
+-- Order the moves tried to maximize the benefit of alpha-beta pruning.
+abSquares :: [Square]
+abSquares = reverse
+            [ (1,1), (1,8), (8,1), (8,8)                             --  20
+            , (3,1), (6,1), (1,3), (8,3), (1,6), (8,6), (3,8), (6,8) --  11
+            , (4,1), (5,1), (1,4), (8,4), (1,5), (8,5), (4,8), (5,8) --   8
+            , (3,3), (4,3), (5,3), (6,3), (3,4), (6,4)               --   2
+            , (3,5), (6,5), (3,6), (4,6), (5,6), (6,6)               --   2
+            , (4,2), (5,2), (2,4), (7,4), (2,5), (7,5), (4,7), (5,7) --   1
+            , (2,1), (7,1), (1,2), (8,2), (1,7), (8,7), (2,8), (7,8) --  -3
+            , (3,2), (6,2), (2,3), (7,3), (2,6), (7,6), (3,7), (6,7) --  -4
+            , (2,2), (7,2), (2,7), (7,7)                             --  -7
+            ]
+
 legalSquares :: Game -> [Square]
-legalSquares (Game p b) = filter (isLegal b p) squares
+legalSquares (Game p b) = filter (isLegal b p) abSquares
 
 legalMoves :: Game -> [(Game, Square)]
 legalMoves g@(Game p b) = zip gs ls
   where
-    ls = filter (isLegal b p) squares
+    ls = filter (isLegal b p) abSquares
     gs = map (flip move g) ls
 
 children :: Game -> [Game]
-children g@(Game p b) = map (flip move g) (filter (isLegal b p) squares)
+children g@(Game p b) = map (flip move g) (filter (isLegal b p) abSquares)
 
 --------------------------------------------------------------------------------------
 -- Minimax
@@ -40,9 +54,9 @@ alphaBeta p gt = alphaBeta' (-1/0) (1/0) p gt
 
 alphaBeta' :: Double -> Double -> Piece -> GameTree -> Double
 alphaBeta' _ _ q (Node g []) = heuristic (board g) q
-alphaBeta' a b q (Node _ gs) = fst $ foldl' sub (a, b) gs
+alphaBeta' a b q (Node _ gs) = fst $ foldl' prune (a, b) gs
   where
-    sub (a', b') n
+    prune (a', b') n
       | a' >= b' = (a', b')
       | otherwise = (max a (- alphaBeta' (-b') (-a') q n), b')
 
@@ -86,12 +100,12 @@ abNextMove n g@(Game p _) = show $ (\(x, y) -> (x, 9 - y)) (snd best)
     ms = legalMoves g
     scores = map (\(g', s) -> (alphaBeta r . gt $ g', s)) ms
     best = maximumBy (compare `on` fst) scores
---------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------
 -- Heuristic, based on:
 -- http://kartikkukreja.wordpress.com/2013/03/30/heuristic-function-for-reversiothello
 --------------------------------------------------------------------------------------
 
--- Assing a score to a board based on the subsequent criteria.
+-- Assign a score to a board based on the prunesequent criteria.
 -- See:
 -- http://courses.cs.washington.edu/courses/cse573/04au/Project/mini1/RUSSIA/Final_Paper.pdf
 heuristic :: Board -> Piece -> Double
@@ -140,7 +154,7 @@ squareValue b p s
     q = b ! s
               
 squareValues :: Board -> Piece -> Double
-squareValues b p = sum $ map (squareValue b p) squares
+squareValues b p = sum $ map (squareValue b p) abSquares
 
 -- Index offsets to 8 adjacent squares.
 frontierX :: Array Int Int
@@ -165,8 +179,8 @@ stability b p
   | inf > sup  =  100 * inf / total
   | otherwise = 0
   where
-    sups       = map (stable b p) squares
-    infs       = map (stable b (opposite p)) squares
+    sups       = map (stable b p) abSquares
+    infs       = map (stable b (opposite p)) abSquares
     (sup, inf) = (sum sups, sum infs)
     total      = sup + sup
     
