@@ -15,8 +15,8 @@ To do
 - [ ] Show number of squares each player has
 - [X] Add module to test the AI
 - [ ] Move syle info to static/css instead of inline
-- [ ] Add minimax or negamax search
-- [ ] Add alph-beta pruning
+- [X] Add minimax or negamax search
+- [X] Add alph-beta pruning
 
 To run
 ------
