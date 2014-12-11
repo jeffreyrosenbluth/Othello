@@ -24,20 +24,6 @@ legalMoves g@(Game p b) = zip gs ls
 children :: Game -> [Game]
 children g@(Game p b) = map (flip move g) (filter (isLegal b p) squares)
 
-chooseMove :: Game -> Move
-chooseMove g = move (snd best)
-  where
-    candidates = legalMoves g
-    scored = map (\((Game p' b'), s) -> (heuristic b' p', s)) candidates
-    best = maximumBy (compare `on` fst) scored
-
-nextMove :: Game -> String
-nextMove g = show $ (\(x, y) -> (x, 9 - y)) (snd best)
-  where
-    candidates = legalMoves g
-    scored = map (\((Game p' b'), s) -> (heuristic b' p', s)) candidates
-    best = maximumBy (compare `on` fst) scored
-
 --------------------------------------------------------------------------------------
 -- Minimax
 --------------------------------------------------------------------------------------
