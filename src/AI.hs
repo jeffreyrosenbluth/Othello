@@ -49,19 +49,16 @@ minimax q (Node (Game p _) xs)
   | p == q = maximum (map (minimax q) xs)
   | otherwise = minimum (map (minimax q) xs)
 
-
--- XXX Does not seem to be working properly.
--- Inferior play without speed gain.
 alphaBeta :: Piece -> GameTree -> Double
 alphaBeta p gt = alphaBeta' (-1/0) (1/0) p gt
 
 alphaBeta' :: Double -> Double -> Piece -> GameTree -> Double
-alphaBeta' _ _ p (Node g []) = heuristic (board g) p
-alphaBeta' a b p (Node _ gs) = fst $ foldl' sub (a, b) gs
+alphaBeta' _ _ q (Node g []) = heuristic (board g) q
+alphaBeta' a b q (Node _ gs) = fst $ foldl' sub (a, b) gs
   where
     sub (a', b') n
       | a' >= b' = (a', b')
-      | otherwise = (max a (- alphaBeta' (-b') (-a) p n), b)
+      | otherwise = (max a (- alphaBeta' (-b') (-a') q n), b')
 
 gameTree :: Game -> GameTree
 gameTree g = Node g (map gameTree (children g))
@@ -75,7 +72,16 @@ mmChooseMove n g@(Game p _) = move (snd best)
   where
     gt = cutoff n . gameTree
     ms = legalMoves g
-    scores = map (\(g', s) -> (alphaBeta p . gt $ g', s)) ms
+    scores = map (\(g', s) -> (minimax p . gt $ g', s)) ms
+    best = maximumBy (compare `on` fst) scores
+
+abChooseMove :: Int -> Game -> Move
+abChooseMove n g@(Game p _) = move (snd best)
+  where
+    r = if even n then p else opposite p
+    gt = cutoff n . gameTree
+    ms = legalMoves g
+    scores = map (\(g', s) -> (alphaBeta r . gt $ g', s)) ms
     best = maximumBy (compare `on` fst) scores
 
 mmNextMove :: Int -> Game -> String
@@ -86,6 +92,13 @@ mmNextMove n g@(Game p _) = show $ (\(x, y) -> (x, 9 - y)) (snd best)
     scores = map (\(g', s) -> (minimax p . gt $ g', s)) ms
     best = maximumBy (compare `on` fst) scores
 
+abNextMove :: Int -> Game -> String
+abNextMove n g@(Game p _) = show $ (\(x, y) -> (x, 9 - y)) (snd best)
+  where
+    gt = cutoff n . gameTree
+    ms = legalMoves g
+    scores = map (\(g', s) -> (alphaBeta p . gt $ g', s)) ms
+    best = maximumBy (compare `on` fst) scores
 --------------------------------------------------------------------------------------
 -- Heuristic, based on:
 -- http://kartikkukreja.wordpress.com/2013/03/30/heuristic-function-for-reversiothello

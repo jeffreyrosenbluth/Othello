@@ -24,7 +24,7 @@ playGame n g = do
   if isOver b
   then g
   else if odd n
-       then playGame (n + 1) (return $ (mmChooseMove 2 g' g'))
+       then playGame (n + 1) (return $ (abChooseMove 2 g' g'))
        else do
          m <- randMove g'
          playGame (n + 1) (return $ m g')
