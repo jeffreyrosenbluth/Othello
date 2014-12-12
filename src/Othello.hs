@@ -39,7 +39,7 @@ toUrls :: Game -> [FilePath]
 toUrls (Game _ b) = [getPieceUrl $ b ! s | s <- squares]
 
 showOpacity :: Bool -> [(String, String)]
-showOpacity b = if b then [("opacity", "0.8")] else [("opacity", "1")]
+showOpacity b = if b then [("opacity", "0.6")] else [("opacity", "1")]
 
 showNotification :: Game -> String
 showNotification (Game p b)
@@ -116,7 +116,6 @@ setup window = void $ do
       setSrcs fs es = zipWithM_ (set UI.src) fs es
   onChanges bState $ \g -> do
     setSrcs (toUrls g) uiCells
-    element ai # set UI.text "AI Move"
 
   -- Display the winner
   let bNotify :: Behavior String
