@@ -105,6 +105,9 @@ setup window = void $ do
       uiCells = map element imgs
 
   ai <- UI.button # set UI.text "AI Move"
+  let eAI = "Thinking" <$ UI.mousedown ai
+  bAI <- stepper "AI Move" eAI
+  sink UI.text bAI (element ai)
 
   bState <- buildGameState imgs ai
 
@@ -113,6 +116,7 @@ setup window = void $ do
       setSrcs fs es = zipWithM_ (set UI.src) fs es
   onChanges bState $ \g -> do
     setSrcs (toUrls g) uiCells
+    element ai # set UI.text "AI Move"
 
   -- Display the winner
   let bNotify :: Behavior String
