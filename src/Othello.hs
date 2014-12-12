@@ -46,6 +46,15 @@ showNotification (Game p b)
   | isOver b = (show $ findWinner b) ++ " player wins!"
   | otherwise = show p ++ "'s turn"
 
+buildGameState :: [Element] -> UI (Behavior Game)
+buildGameState images  = do
+  eState <- accumE newGame (moves images)
+  stepper newGame eState
+    where
+      clicks     = map UI.click
+      moves imgs = fmap concatenate . unions $ zipWith (\e s -> move s <$ e)
+                   (clicks imgs) squares
+    
 setup :: Window -> UI ()
 setup window = void $ do
   return window # set title "Othello"
@@ -62,20 +71,55 @@ setup window = void $ do
   let uiCells :: [UI Element]
       uiCells = map element imgs
 
-      clicks :: [Event ()]
-      clicks =  map UI.click imgs
+      -- clicks :: [Event ()]
+      -- clicks =  map UI.click imgs
 
-      -- Create a stream of events
-      moves :: Event Move
-      moves = fmap concatenate . unions $ zipWith (\e s -> move s <$ e)
-              clicks squares
+      -- -- Create a stream of events
+      -- moves :: Event Move
+      -- moves = fmap concatenate . unions $ zipWith (\e s -> move s <$ e)
+      --         clicks squares
 
   -- The Game state at the time of a click
-  eState <- accumE newGame moves
+  -- eState <- accumE newGame moves
 
   -- A behavior; a function from time t to Game
-  bState <- stepper newGame eState
+  -- bState <- stepper newGame eState
+  bState <- buildGameState imgs
 
+----------------------------------------------------------------------
+  -- seconds <- UI.timer # set UI.interval 2000 
+  -- UI.start seconds
+
+  -- let eBlack :: Event Piece
+  --     eBlack = Black <$ moves
+
+  --     eWhite :: Event Piece
+  --     eWhite = White <$ (UI.tick seconds)
+
+  --     ePlayer' :: Event Piece
+  --     ePlayer' = unionWith (\a _ -> a) eBlack eWhite
+
+  --     eToPlayer :: Event (Piece -> Piece)
+  --     eToPlayer = (\e -> if e == White then const Black else const White) <$> ePlayer'
+
+  -- ePlayer <- accumE Black eToPlayer
+  -- -- bPlayer <- stepper Black ePlayer
+
+  -- let wPlayer :: Event Piece
+  --     wPlayer = filterE (== White) ePlayer
+
+  --     wMoves :: Behavior Move
+  --     wMoves = abChooseMove 2 <$> bState
+
+  --     eWMoves :: Event Move
+  --     eWMoves = wMoves <@ wPlayer
+
+  --     eBWMoves :: Event Move
+  --     eBWMoves = unionWith (\a _ -> a) moves eWMoves
+
+  -- eBWState <- accumE newGame eBWMoves
+  -- bBWState <- stepper newGame eBWState
+----------------------------------------------------------------------
   -- Set Notification
   notification <- UI.h2
 
@@ -114,7 +158,7 @@ setup window = void $ do
   onChanges bState $ \g -> do
     setSrcs (toUrls g) uiCells
 
-  ai <- UI.button # set UI.text "AI Move"
+  ai <- UI.button
 
   let eAIclick :: Event ()
       eAIclick = UI.click ai
@@ -125,17 +169,27 @@ setup window = void $ do
   bAI <- stepper "Hint" (abNextMove 4 <$> eAI)
   sink UI.text bAI (element ai)
 
+
+
+
+
+----------------------------------------------------------------------
+
   getBody window #+ [ column
                       [ UI.h1 #+ [string "Othello"]
-                      , grid (chunksOf 8 uiCells) # set UI.style [("line-height", "0")]
-                      , UI.div #+ [element notification] # set UI.class_ "notification"
-                      , element ai # set UI.style [ ("font", "bold 24px Optima")
-                                                  , ("background-color", "#DDDDDD")
-                                                  , ("color", "darkred")
-                                                  , ("margin", "0 auto") ]
-                      ] # set UI.style [("background-color","#DDDDDD")
-                                       ,("text-align","center")
-                                       ,("font-family","Optima, Arial, Helvetica, sans-serif")
-                                       ,("margin","0 auto")
-                                       ,("border","solid 3px #CACACA")]
+                      , grid (chunksOf 8 uiCells)
+                      # set UI.style [("line-height", "0")]
+                      , UI.div #+ [element notification]
+                      # set UI.class_ "notification"
+                      , element ai
+                      # set UI.style [ ("font", "bold 24px Optima")
+                                     , ("background-color", "#DDDDDD")
+                                     , ("color", "darkred")
+                                     , ("margin", "0 auto") ]
+                      ]
+                      # set UI.style [ ("background-color","#DDDDDD")
+                                     ,("text-align","center")
+                                     ,("font-family","Optima, Arial, Helvetica, sans-serif")
+                                     ,("margin","0 auto")
+                                     ,("border","solid 3px #CACACA") ]
                     ]

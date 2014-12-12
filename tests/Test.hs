@@ -1,3 +1,6 @@
+--------------------------------------------------------------------------------------
+-- Testing
+--------------------------------------------------------------------------------------
 module Main where
 
 import Types
@@ -17,7 +20,6 @@ randMove g = do
   idx <- randIndex n
   return $ move (ls !! idx)
 
-
 playGame :: RandomGen r => Int -> Rand r Game -> Rand r Game
 playGame n g = do
   g'@(Game _ b) <- g
@@ -31,15 +33,15 @@ playGame n g = do
 
 main :: IO ()
 main = do
-  gs <- forM [1..10] $ \_ -> evalRandIO $ playGame 1 (return newGame)
-  hs <- forM [1..10] $ \_ -> evalRandIO $ playGame 0 (return newGame)
+  gs <- forM ([1..10] :: [Int]) $ const (evalRandIO $ playGame 1 (return newGame))
+  hs <- forM ([1..10] :: [Int]) $ const (evalRandIO $ playGame 0 (return newGame))
   let resultsB = map (findWinner . board) gs
       blackWins = sum $ map (oneIfEq Black) resultsB
       resultsW = map (findWinner . board) hs
       whiteWins = sum $ map (oneIfEq White) resultsW
   print $ "Computer playing black wins "
        ++ show blackWins
-       ++ " out of 100 games against random play."
+       ++ " out of 10 games against random play."
   print $ "Computer playing white wins "
        ++ show whiteWins
-       ++ " out of 100 games against random play."
+       ++ " out of 10 games against random play."

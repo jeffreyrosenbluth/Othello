@@ -105,7 +105,7 @@ abNextMove n g@(Game p _) = show $ (\(x, y) -> (x, 9 - y)) (snd best)
 -- http://kartikkukreja.wordpress.com/2013/03/30/heuristic-function-for-reversiothello
 --------------------------------------------------------------------------------------
 
--- Assign a score to a board based on the prunesequent criteria.
+-- Assign a score to a board based on the subsequent criteria.
 -- See:
 -- http://courses.cs.washington.edu/courses/cse573/04au/Project/mini1/RUSSIA/Final_Paper.pdf
 heuristic :: Board -> Piece -> Double
