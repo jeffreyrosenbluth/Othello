@@ -15,7 +15,7 @@ import qualified Graphics.UI.Threepenny as UI
 import           Graphics.UI.Threepenny.Core hiding (on)
 
 ----------------------------------------------------------------------
--- GUI
+-- Utility Functions
 ----------------------------------------------------------------------
 main :: IO ()
 main = do
@@ -69,13 +69,36 @@ hover imgs state = mapM (stepper False) eHovers
     eHovers      = zipWith union eHovering bLeaves
     
 ----------------------------------------------------------------------
+-- Styles
+----------------------------------------------------------------------
+type Style = [(String, String)]
+
+imgStyle :: Style
+imgStyle = [("width","50px"),("height","50px")]
+
+btnStyle :: Style
+btnStyle = [ ("font", "bold 24px Optima")
+           , ("background-color", "#DDDDDD")
+           , ("color", "darkred")
+           , ("margin", "0 auto") ]
+
+colStyle :: Style
+colStyle = [ ("background-color","#DDDDDD")
+           ,("text-align","center")
+           ,("font-family","Optima, Arial, Helvetica, sans-serif")
+           ,("margin","0 auto")
+           ,("border","solid 3px #CACACA") ]
+           
+----------------------------------------------------------------------
+-- Build the GUI
+----------------------------------------------------------------------
 setup :: Window -> UI ()
 setup window = void $ do
   return window # set title "Othello"
 
   let uiImg :: FilePath -> UI Element
       uiImg fp = UI.img # set UI.src fp
-                        # set UI.style [("width","50px"),("height","50px")]
+                        # set UI.style imgStyle
 
   imgs <- mapM uiImg initImgs
   let uiCells :: [UI Element]
@@ -110,15 +133,8 @@ setup window = void $ do
                       , UI.div #+ [element notification]
                       # set UI.class_ "notification"
                       , element ai
-                      # set UI.style [ ("font", "bold 24px Optima")
-                                     , ("background-color", "#DDDDDD")
-                                     , ("color", "darkred")
-                                     , ("margin", "0 auto") ]
+                      # set UI.style btnStyle
                       ]
-                      # set UI.style [ ("background-color","#DDDDDD")
-                                     ,("text-align","center")
-                                     ,("font-family","Optima, Arial, Helvetica, sans-serif")
-                                     ,("margin","0 auto")
-                                     ,("border","solid 3px #CACACA") ]
+                      # set UI.style colStyle
                     ]
 -------------------------------------------------------------------------
