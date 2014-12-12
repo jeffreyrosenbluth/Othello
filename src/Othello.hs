@@ -47,133 +47,62 @@ showNotification (Game p b)
   | otherwise = show p ++ "'s turn"
 
 buildGameState :: [Element] -> UI (Behavior Game)
-buildGameState images  = do
-  eState <- accumE newGame (moves images)
+buildGameState imgs = do
+  eState <- accumE newGame moves
   stepper newGame eState
     where
-      clicks     = map UI.click
-      moves imgs = fmap concatenate . unions $ zipWith (\e s -> move s <$ e)
-                   (clicks imgs) squares
+      clicks = map UI.click
+      moves  = fmap concatenate . unions $ zipWith (\e s -> move s <$ e)
+               (clicks imgs) squares
     
+hover :: [Element] -> Behavior Game -> UI [Behavior Bool]
+hover imgs state = mapM (stepper False) eHovers
+  where
+    hoverSquares = zipWith (\e s -> s <$ e) (UI.hover <$> imgs) squares
+    leaves       = (fmap . fmap) (const False) (UI.leave <$> imgs)
+    bLegal       = (\g -> isLegal (board g) (piece g)) <$> state
+    eHovering    = (\e -> bLegal <@> e) <$> hoverSquares
+    eHovers      = zipWith (unionWith (\a _ -> a)) eHovering leaves
+    
+----------------------------------------------------------------------
 setup :: Window -> UI ()
 setup window = void $ do
   return window # set title "Othello"
-  -- UI.addStyleSheet window "style.css"
 
-  -- Create 64 empty tile images
   let uiImg :: FilePath -> UI Element
       uiImg fp = UI.img # set UI.src fp
                         # set UI.style [("width","50px"),("height","50px")]
 
   imgs <- mapM uiImg initImgs
-  
-  -- Turn our images into elements, and create events for each image
   let uiCells :: [UI Element]
       uiCells = map element imgs
 
-      -- clicks :: [Event ()]
-      -- clicks =  map UI.click imgs
-
-      -- -- Create a stream of events
-      -- moves :: Event Move
-      -- moves = fmap concatenate . unions $ zipWith (\e s -> move s <$ e)
-      --         clicks squares
-
-  -- The Game state at the time of a click
-  -- eState <- accumE newGame moves
-
-  -- A behavior; a function from time t to Game
-  -- bState <- stepper newGame eState
   bState <- buildGameState imgs
 
-----------------------------------------------------------------------
-  -- seconds <- UI.timer # set UI.interval 2000 
-  -- UI.start seconds
-
-  -- let eBlack :: Event Piece
-  --     eBlack = Black <$ moves
-
-  --     eWhite :: Event Piece
-  --     eWhite = White <$ (UI.tick seconds)
-
-  --     ePlayer' :: Event Piece
-  --     ePlayer' = unionWith (\a _ -> a) eBlack eWhite
-
-  --     eToPlayer :: Event (Piece -> Piece)
-  --     eToPlayer = (\e -> if e == White then const Black else const White) <$> ePlayer'
-
-  -- ePlayer <- accumE Black eToPlayer
-  -- -- bPlayer <- stepper Black ePlayer
-
-  -- let wPlayer :: Event Piece
-  --     wPlayer = filterE (== White) ePlayer
-
-  --     wMoves :: Behavior Move
-  --     wMoves = abChooseMove 2 <$> bState
-
-  --     eWMoves :: Event Move
-  --     eWMoves = wMoves <@ wPlayer
-
-  --     eBWMoves :: Event Move
-  --     eBWMoves = unionWith (\a _ -> a) moves eWMoves
-
-  -- eBWState <- accumE newGame eBWMoves
-  -- bBWState <- stepper newGame eBWState
-----------------------------------------------------------------------
-  -- Set Notification
-  notification <- UI.h2
-
-  let bNotify :: Behavior String
-      bNotify = showNotification <$> bState
-
-  sink UI.text bNotify $ element notification
-
-  -- Show legal moves
-  let hoverSquares :: [Event Square]
-      hoverSquares = zipWith (\e s -> s <$ e) (UI.hover <$> imgs) squares
-
-      leaves :: [Event Bool]
-      leaves = (fmap . fmap) (const False) (UI.leave <$> imgs)
-
-      bLegal :: Behavior (Square -> Bool)
-      bLegal = (\g -> isLegal (board g) (piece g)) <$> bState
-
-      eHovering :: [Event Bool]
-      eHovering = (\e -> bLegal <@> e) <$> hoverSquares
-
-      eHovers :: [Event Bool]
-      eHovers = zipWith (unionWith (\a _ -> a)) eHovering leaves
-
-  bHovers <- mapM (stepper False) eHovers
-
-  let bHoverStyle :: [Behavior [(String, String)]]
-      bHoverStyle = (fmap . fmap) showOpacity bHovers
-
-  zipWithM_ (\b e -> sink UI.style b e) bHoverStyle uiCells
-  
   -- Update Board
   let setSrcs :: [FilePath] -> [UI Element] -> UI ()
       setSrcs fs es = zipWithM_ (set UI.src) fs es
-      
   onChanges bState $ \g -> do
     setSrcs (toUrls g) uiCells
 
+  -- Display the winner
+  let bNotify :: Behavior String
+      bNotify = showNotification <$> bState
+  notification <- UI.h2
+  sink UI.text bNotify $ element notification
+
+  -- Show legal moves when hovering over a cell.
+  bHovers <- hover imgs bState
+  let bHoverStyle :: [Behavior [(String, String)]]
+      bHoverStyle = (fmap . fmap) showOpacity bHovers
+  zipWithM_ (\b e -> sink UI.style b e) bHoverStyle uiCells
+  
+  -- Show hint when button is pressed.
   ai <- UI.button
-
-  let eAIclick :: Event ()
-      eAIclick = UI.click ai
-
-      eAI :: Event Game
-      eAI = bState <@ eAIclick
-
+  let eAI :: Event Game
+      eAI = bState <@ (UI.click ai)
   bAI <- stepper "Hint" (abNextMove 4 <$> eAI)
   sink UI.text bAI (element ai)
-
-
-
-
-
-----------------------------------------------------------------------
 
   getBody window #+ [ column
                       [ UI.h1 #+ [string "Othello"]
@@ -193,3 +122,4 @@ setup window = void $ do
                                      ,("margin","0 auto")
                                      ,("border","solid 3px #CACACA") ]
                     ]
+-------------------------------------------------------------------------
