@@ -46,16 +46,18 @@ showNotification (Game p b)
   | isOver b = (show $ findWinner b) ++ " player wins!"
   | otherwise = show p ++ "'s turn"
 
+union :: Event a -> Event a -> Event a
+union = unionWith (curry fst)
+
 buildGameState :: [Element] -> Element -> UI (Behavior Game)
 buildGameState imgs btn = do
   eState <- accumE newGame moves
   stepper newGame eState
     where
-      clicks    = map UI.click
       ePlayer   = fmap concatenate . unions $ zipWith (\e s -> move s <$ e)
-                  (clicks imgs) squares
+                  (map UI.click imgs) squares
       eComputer = (\s -> mmChooseMove 4 s s) <$ (UI.click btn)
-      moves     = unionWith (\a _ -> a) ePlayer eComputer
+      moves     = union ePlayer eComputer
     
 hover :: [Element] -> Behavior Game -> UI [Behavior Bool]
 hover imgs state = mapM (stepper False) eHovers
@@ -64,7 +66,7 @@ hover imgs state = mapM (stepper False) eHovers
     bLeaves      = (fmap . fmap) (const False) (UI.leave <$> imgs)
     bLegal       = (\g -> isLegal (board g) (piece g)) <$> state
     eHovering    = (\e -> bLegal <@> e) <$> hoverSquares
-    eHovers      = zipWith (unionWith (\a _ -> a)) eHovering bLeaves
+    eHovers      = zipWith union eHovering bLeaves
     
 ----------------------------------------------------------------------
 setup :: Window -> UI ()
