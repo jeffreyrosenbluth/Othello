@@ -46,23 +46,25 @@ showNotification (Game p b)
   | isOver b = (show $ findWinner b) ++ " player wins!"
   | otherwise = show p ++ "'s turn"
 
-buildGameState :: [Element] -> UI (Behavior Game)
-buildGameState imgs = do
+buildGameState :: [Element] -> Element -> UI (Behavior Game)
+buildGameState imgs btn = do
   eState <- accumE newGame moves
   stepper newGame eState
     where
-      clicks = map UI.click
-      moves  = fmap concatenate . unions $ zipWith (\e s -> move s <$ e)
-               (clicks imgs) squares
+      clicks    = map UI.click
+      ePlayer   = fmap concatenate . unions $ zipWith (\e s -> move s <$ e)
+                  (clicks imgs) squares
+      eComputer = (\s -> mmChooseMove 4 s s) <$ (UI.click btn)
+      moves     = unionWith (\a _ -> a) ePlayer eComputer
     
 hover :: [Element] -> Behavior Game -> UI [Behavior Bool]
 hover imgs state = mapM (stepper False) eHovers
   where
     hoverSquares = zipWith (\e s -> s <$ e) (UI.hover <$> imgs) squares
-    leaves       = (fmap . fmap) (const False) (UI.leave <$> imgs)
+    bLeaves      = (fmap . fmap) (const False) (UI.leave <$> imgs)
     bLegal       = (\g -> isLegal (board g) (piece g)) <$> state
     eHovering    = (\e -> bLegal <@> e) <$> hoverSquares
-    eHovers      = zipWith (unionWith (\a _ -> a)) eHovering leaves
+    eHovers      = zipWith (unionWith (\a _ -> a)) eHovering bLeaves
     
 ----------------------------------------------------------------------
 setup :: Window -> UI ()
@@ -77,7 +79,9 @@ setup window = void $ do
   let uiCells :: [UI Element]
       uiCells = map element imgs
 
-  bState <- buildGameState imgs
+  ai <- UI.button # set UI.text "AI Move"
+
+  bState <- buildGameState imgs ai
 
   -- Update Board
   let setSrcs :: [FilePath] -> [UI Element] -> UI ()
@@ -97,13 +101,6 @@ setup window = void $ do
       bHoverStyle = (fmap . fmap) showOpacity bHovers
   zipWithM_ (\b e -> sink UI.style b e) bHoverStyle uiCells
   
-  -- Show hint when button is pressed.
-  ai <- UI.button
-  let eAI :: Event Game
-      eAI = bState <@ (UI.click ai)
-  bAI <- stepper "Hint" (abNextMove 4 <$> eAI)
-  sink UI.text bAI (element ai)
-
   getBody window #+ [ column
                       [ UI.h1 #+ [string "Othello"]
                       , grid (chunksOf 8 uiCells)
