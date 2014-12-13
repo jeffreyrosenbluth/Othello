@@ -47,7 +47,14 @@ showNotification (Game p b)
   | otherwise = show p ++ "'s turn"
 
 union :: Event a -> Event a -> Event a
-union = unionWith (curry fst)
+union = unionWith const
+
+-- Not currently used but may come in handy when trying to hook up
+-- an AI player that moves at certain times.
+unique :: (MonadIO m, Eq a) => Event a -> m (Event a)
+unique e = do
+  ae <- accumE Nothing $ (\a acc -> if Just a == acc then Nothing else Just a) <$> e
+  return $ filterJust ae
 
 buildGameState :: [Element] -> Element -> UI (Behavior Game)
 buildGameState imgs btn = do
