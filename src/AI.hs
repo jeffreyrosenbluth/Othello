@@ -43,12 +43,6 @@ children g@(Game p b) = map (flip move g) (filter (isLegal b p) abSquares)
 --------------------------------------------------------------------------------------
 type GameTree = Tree Game
 
-minimax :: Piece -> GameTree -> Double
-minimax q (Node g []) = heuristic (board g) q
-minimax q (Node (Game p _) xs)
-  | p == q = maximum (map (minimax q) xs)
-  | otherwise = minimum (map (minimax q) xs)
-
 alphaBeta :: GameTree -> Double
 alphaBeta gt = alphaBeta' (-1/0) (1/0) gt
 
@@ -67,37 +61,29 @@ cutoff :: Int -> GameTree -> GameTree
 cutoff 0 (Node g _) = Node g []
 cutoff n (Node g gs) = Node g (map (cutoff (n - 1)) gs)
 
-mmChooseMove :: Int -> Game -> Move
-mmChooseMove n g@(Game p _) = move (snd best)
-  where
-    gt = cutoff n . gameTree
-    ms = legalMoves g
-    scores = map (\(g', s) -> (minimax p . gt $ g', s)) ms
-    best = maximumBy (compare `on` fst) scores
-
-abChooseMove :: Int -> Game -> Move
-abChooseMove n g = move (snd best)
+nextMove :: Int -> Game -> Move
+nextMove n g = move (snd best)
   where
     gt = cutoff n . gameTree
     ms = legalMoves g
     scores = map (\(g', s) -> (alphaBeta . gt $ g', s)) ms
     best = minimumBy (compare `on` fst) scores
 
-mmNextMove :: Int -> Game -> String
-mmNextMove n g@(Game p _) = show $ (\(x, y) -> (x, 9 - y)) (snd best)
+-- For comparison.
+minimax :: Piece -> GameTree -> Double
+minimax q (Node g []) = heuristic (board g) q
+minimax q (Node (Game p _) xs)
+  | p == q = maximum (map (minimax q) xs)
+  | otherwise = minimum (map (minimax q) xs)
+
+mmNextMove :: Int -> Game -> Move
+mmNextMove n g@(Game p _) = move (snd best)
   where
     gt = cutoff n . gameTree
     ms = legalMoves g
     scores = map (\(g', s) -> (minimax p . gt $ g', s)) ms
     best = maximumBy (compare `on` fst) scores
 
-abNextMove :: Int -> Game -> String
-abNextMove n g = show $ (\(x, y) -> (x, 9 - y)) (snd best)
-  where
-    gt = cutoff n . gameTree
-    ms = legalMoves g
-    scores = map (\(g', s) -> (alphaBeta . gt $ g', s)) ms
-    best = minimumBy (compare `on` fst) scores
 -------------------------------------------------------------------------------------
 -- Heuristic, based on:
 -- http://kartikkukreja.wordpress.com/2013/03/30/heuristic-function-for-reversiothello
