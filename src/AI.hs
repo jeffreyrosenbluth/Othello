@@ -8,7 +8,7 @@ import Game
 
 import Data.Array
 import Data.Function (on)
-import Data.List (maximumBy, foldl')
+import Data.List (maximumBy, minimumBy, foldl')
 import Data.Tree
 --------------------------------------------------------------------------------------
 
@@ -49,16 +49,16 @@ minimax q (Node (Game p _) xs)
   | p == q = maximum (map (minimax q) xs)
   | otherwise = minimum (map (minimax q) xs)
 
-alphaBeta :: Piece -> GameTree -> Double
-alphaBeta p gt = alphaBeta' (-1/0) (1/0) p gt
+alphaBeta :: GameTree -> Double
+alphaBeta gt = alphaBeta' (-1/0) (1/0) gt
 
-alphaBeta' :: Double -> Double -> Piece -> GameTree -> Double
-alphaBeta' _ _ q (Node g []) = heuristic (board g) q
-alphaBeta' a b q (Node _ gs) = fst $ foldl' prune (a, b) gs
+alphaBeta' :: Double -> Double -> GameTree -> Double
+alphaBeta' _ _ (Node g []) = heuristic (board g) (piece g)
+alphaBeta' a b (Node _ gs) = fst $ foldl' prune (a, b) gs
   where
     prune (a', b') n
-      | a' >= b' = (a', b')
-      | otherwise = (max a (- alphaBeta' (-b') (-a') q n), b')
+      | b' < a' = (a', b')
+      | otherwise = (max a (- alphaBeta' (-b') (-a') n), b')
 
 gameTree :: Game -> GameTree
 gameTree g = Node g (map gameTree (children g))
@@ -76,13 +76,12 @@ mmChooseMove n g@(Game p _) = move (snd best)
     best = maximumBy (compare `on` fst) scores
 
 abChooseMove :: Int -> Game -> Move
-abChooseMove n g@(Game p _) = move (snd best)
+abChooseMove n g = move (snd best)
   where
-    r = if even n then p else opposite p
     gt = cutoff n . gameTree
     ms = legalMoves g
-    scores = map (\(g', s) -> (alphaBeta r . gt $ g', s)) ms
-    best = maximumBy (compare `on` fst) scores
+    scores = map (\(g', s) -> (alphaBeta . gt $ g', s)) ms
+    best = minimumBy (compare `on` fst) scores
 
 mmNextMove :: Int -> Game -> String
 mmNextMove n g@(Game p _) = show $ (\(x, y) -> (x, 9 - y)) (snd best)
@@ -93,13 +92,12 @@ mmNextMove n g@(Game p _) = show $ (\(x, y) -> (x, 9 - y)) (snd best)
     best = maximumBy (compare `on` fst) scores
 
 abNextMove :: Int -> Game -> String
-abNextMove n g@(Game p _) = show $ (\(x, y) -> (x, 9 - y)) (snd best)
+abNextMove n g = show $ (\(x, y) -> (x, 9 - y)) (snd best)
   where
-    r = if even n then p else opposite p
     gt = cutoff n . gameTree
     ms = legalMoves g
-    scores = map (\(g', s) -> (alphaBeta r . gt $ g', s)) ms
-    best = maximumBy (compare `on` fst) scores
+    scores = map (\(g', s) -> (alphaBeta . gt $ g', s)) ms
+    best = minimumBy (compare `on` fst) scores
 -------------------------------------------------------------------------------------
 -- Heuristic, based on:
 -- http://kartikkukreja.wordpress.com/2013/03/30/heuristic-function-for-reversiothello
