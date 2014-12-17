@@ -4,11 +4,7 @@
 
 module Types where
 
-import           Data.Array
-
-data Direction = N | NE | E | SE
-               | S | SW | W | NW
-  deriving (Enum)
+import Data.Array
 
 data Piece = Empty | Black | White
   deriving (Show, Eq)

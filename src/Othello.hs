@@ -63,7 +63,7 @@ buildGameState imgs btn = do
     where
       ePlayer   = fmap concatenate . unions $ zipWith (\e s -> move s <$ e)
                   (map UI.click imgs) squares
-      eComputer = (\s -> nextMove 4 s s) <$ (UI.click btn)
+      eComputer = (\s -> nextMove 6 s s) <$ (UI.click btn)
       moves     = union ePlayer eComputer
     
 hover :: [Element] -> Behavior Game -> UI [Behavior Bool]

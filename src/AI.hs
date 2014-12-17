@@ -97,7 +97,7 @@ heuristic b p =  10.0   * parity b p
               + 801.724 * cornerOcc b p
               + 382.026 * cornerAdj b p
               +  78.922 * mobility b p
-              +  74.396 * stability b p
+              -- +  74.396 * stability b p
               +  10.0   * squareValues b p
   
 oneIfEq :: Eq a => a -> a -> Double

@@ -7,18 +7,29 @@ import Data.Array
 ----------------------------------------------------------------------
 -- Game Logic
 ----------------------------------------------------------------------
-line :: Square -> Direction -> Line
-line (x, y) N  = [(x, y + h)     | h <- [1..8], y+h <= 8]
-line (x, y) S  = [(x, y - h)     | h <- [1..8], y-h >= 1]
-line (x, y) E  = [(x + h, y)     | h <- [1..8], x+h <= 8]
-line (x, y) W  = [(x - h, y)     | h <- [1..8], x-h >= 1]
-line (x, y) NE = [(x + h, y + h) | h <- [1..8], y+h <= 8, x+h <= 8]
-line (x, y) SE = [(x + h, y - h) | h <- [1..8], y-h >= 1, x+h <= 8]
-line (x, y) NW = [(x - h, y + h) | h <- [1..8], y+h <= 8, x-h >= 1]
-line (x, y) SW = [(x - h, y - h) | h <- [1..8], y-h >= 1, x-h >= 1]
 
+-- Memoize line calculations
+line :: Array (Int, Int, Int) Line
+line = array ((1, 1, 1), (8, 8, 8)) [((i, j, d), line' i j d) | i <- [1..8], j <- [1..8], d <- [1..8]]
+  where
+    line' :: Int -> Int -> Int -> Line
+    line' x y 1 = [(x, y + h)     | h <- [1..8], y+h <= 8]
+    line' x y 2 = [(x, y - h)     | h <- [1..8], y-h >= 1]
+    line' x y 3 = [(x + h, y)     | h <- [1..8], x+h <= 8]
+    line' x y 4 = [(x - h, y)     | h <- [1..8], x-h >= 1]
+    line' x y 5 = [(x + h, y + h) | h <- [1..8], y+h <= 8, x+h <= 8]
+    line' x y 6 = [(x + h, y - h) | h <- [1..8], y-h >= 1, x+h <= 8]
+    line' x y 7 = [(x - h, y + h) | h <- [1..8], y+h <= 8, x-h >= 1]
+    line' x y 8 = [(x - h, y - h) | h <- [1..8], y-h >= 1, x-h >= 1]
+    line' _ _ _ = []
+
+-- pieces brd = map (brd !)
 pieces :: Board -> Line -> [Piece]
-pieces brd = map (brd !)
+pieces brd = go
+  where
+    go [] = []
+    go (y:ys) = brd ! y : go ys
+{-# INLINE pieces #-}
 
 opposite :: Piece -> Piece
 opposite Black = White
@@ -43,15 +54,16 @@ toFlip :: Board -> Piece -> Line -> Line
 toFlip _ _ []   = []
 toFlip _ _ (_:[]) = []
 toFlip b p l
+  | b ! (head l) == p || b ! (head l) == Empty = [] -- short circuit for obvious cases.
   | zs /= [] && fst (head zs) == p = map snd ys 
   | otherwise = []
   where
-    a  = zip (pieces b l) l
-    ys = takeWhile (\y -> fst y == opposite p) a
-    zs = dropWhile (\y -> fst y == opposite p) a
+    (ys, zs) = span ((== opposite p) . fst) $ zip (pieces b l) l
 
 toFlipAll :: Board -> Piece -> Square -> [Square]
-toFlipAll b p s = concat [toFlip b p l | l <- map (line s) [N .. NW]]
+toFlipAll b p s = concat [toFlip b p l | l <- map ln [1..8]]
+  where
+    ln z = line ! (fst s, snd s, z)
 
 flipBoard :: Board -> Piece -> Square -> Board
 flipBoard b p s = b // ((s, p) : zip flips (repeat p))
