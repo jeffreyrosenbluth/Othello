@@ -57,7 +57,7 @@ buildGameState imgs = do
                   (map UI.click imgs) squares
       eComputer = (\s -> nextMove 4 s s) <$ ePlayer
       moves     = fmap concatenate . unions $ [eComputer, ePlayer]
-    
+
 hover :: [Element] -> Behavior Game -> UI [Behavior Bool]
 hover imgs state = mapM (stepper False) eHovers
   where
@@ -66,31 +66,11 @@ hover imgs state = mapM (stepper False) eHovers
     bLegal       = (\g -> isLegal (board g) (piece g)) <$> state
     eHovering    = (\e -> bLegal <@> e) <$> hoverSquares
     eHovers      = zipWith union eHovering bLeaves
-    
-----------------------------------------------------------------------
--- Styles
-----------------------------------------------------------------------
-type Style = [(String, String)]
-
-imgStyle :: Style
-imgStyle = [("width","50px"),("height","50px")]
-
-btnStyle :: Style
-btnStyle = [ ("font", "bold 24px Optima")
-           , ("background-color", "#DDDDDD")
-           , ("color", "darkred")
-           , ("margin", "0 auto") ]
-
-colStyle :: Style
-colStyle = [ ("background-color","#DDDDDD")
-           ,("text-align","center")
-           ,("font-family","Optima, Arial, Helvetica, sans-serif")
-           ,("margin","0 auto")
-           ,("border","solid 3px #CACACA") ]
            
 ----------------------------------------------------------------------
 -- Build the GUI
 ----------------------------------------------------------------------
+
 setup :: Window -> UI ()
 setup window = void $ do
   return window # set title "Othello"
@@ -108,9 +88,7 @@ setup window = void $ do
   -- Update Board
   let setSrcs :: [FilePath] -> [UI Element] -> UI ()
       setSrcs fs es = zipWithM_ (set UI.src) fs es
-  onChanges bState $ \g -> do
-    setSrcs (toUrls g) uiCells
-    -- element ai # set UI.text "AI Move"
+  onChanges bState $ \g -> setSrcs (toUrls g) uiCells
 
   -- Display the winner
   let bNotify :: Behavior String
@@ -131,4 +109,25 @@ setup window = void $ do
                       ]
                       # set UI.style colStyle
                     ]
+
+----------------------------------------------------------------------
+-- Styles
+----------------------------------------------------------------------
+type Style = [(String, String)]
+
+imgStyle :: Style
+imgStyle = [("width","50px"),("height","50px")]
+
+btnStyle :: Style
+btnStyle = [ ("font", "bold 24px Optima")
+           , ("background-color", "#DDDDDD")
+           , ("color", "darkred")
+           , ("margin", "0 auto") ]
+
+colStyle :: Style
+colStyle = [ ("background-color","#DDDDDD")
+           ,("text-align","center")
+           ,("font-family","Optima, Arial, Helvetica, sans-serif")
+           ,("margin","0 auto")
+           ,("border","solid 3px #CACACA") ]
 -------------------------------------------------------------------------
