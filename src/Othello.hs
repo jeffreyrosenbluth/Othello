@@ -54,9 +54,9 @@ buildGameState imgs = do
   stepper newGame eState
     where
       ePlayer   = fmap concatenate . unions $ zipWith (\e s -> move s <$ e)
-                  (map UI.click imgs) squares
-      eComputer = (\s -> nextMove 4 s s) <$ ePlayer
-      moves     = fmap concatenate . unions $ [eComputer, ePlayer]
+                  (map UI.mousedown imgs) squares
+      eMachine  = (\s -> nextMove 4 s s) <$ (unions $ (UI.mouseup  <$> imgs))
+      moves     = fmap concatenate . unions $ [eMachine, ePlayer]
 
 hover :: [Element] -> Behavior Game -> UI [Behavior Bool]
 hover imgs state = mapM (stepper False) eHovers
