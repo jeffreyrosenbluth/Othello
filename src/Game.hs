@@ -73,16 +73,13 @@ flipBoard b p s = b // ((s, p) : zip flips (repeat p))
 isLegal :: Board -> Piece -> Square -> Bool
 isLegal b p s = b ! s == Empty && (not . null $ toFlipAll b p s)
 
-allSquares :: [Square]
-allSquares = [(a,b) | a <- [1..8], b <- [1..8]]
-
 legalSquares :: Game -> [Square]
-legalSquares (Game p b) = filter (isLegal b p) allSquares
+legalSquares (Game p b) = filter (isLegal b p) squares
 
 legalMoves :: Game -> [(Game, Square)]
 legalMoves g@(Game p b) = zip gs ls
   where
-    ls = filter (isLegal b p) allSquares
+    ls = filter (isLegal b p) squares
     gs = map (\s ->  move p s g) ls
 
 move :: Piece -> Square -> Game -> Game
