@@ -26,17 +26,8 @@ abSquares = reverse
             , (2,2), (7,2), (2,7), (7,7)                             --  -7
             ]
 
-legalSquares :: Game -> [Square]
-legalSquares (Game p b) = filter (isLegal b p) abSquares
-
-legalMoves :: Game -> [(Game, Square)]
-legalMoves g@(Game p b) = zip gs ls
-  where
-    ls = filter (isLegal b p) abSquares
-    gs = map (flip move g) ls
-
 children :: Game -> [Game]
-children g@(Game p b) = map (flip move g) (filter (isLegal b p) abSquares)
+children g@(Game p b) = map (\s -> move p s g) (filter (isLegal b p) abSquares)
 
 --------------------------------------------------------------------------------------
 -- Minimax
@@ -61,8 +52,8 @@ cutoff :: Int -> GameTree -> GameTree
 cutoff 0 (Node g _) = Node g []
 cutoff n (Node g gs) = Node g (map (cutoff (n - 1)) gs)
 
-nextMove :: Int -> Game -> Move
-nextMove n g = move (snd best)
+nextMove :: Int -> Piece -> Game -> Move
+nextMove n p g = move p (snd best)
   where
     gt = cutoff n . gameTree
     ms = legalMoves g
@@ -76,8 +67,8 @@ minimax q (Node (Game p _) xs)
   | p == q = maximum (map (minimax q) xs)
   | otherwise = minimum (map (minimax q) xs)
 
-mmNextMove :: Int -> Game -> Move
-mmNextMove n g@(Game p _) = move (snd best)
+mmNextMove :: Int -> Piece -> Game -> Move
+mmNextMove n player g@(Game p _) = move player (snd best)
   where
     gt = cutoff n . gameTree
     ms = legalMoves g

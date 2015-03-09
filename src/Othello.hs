@@ -43,7 +43,12 @@ showOpacity b = if b then [("opacity", "0.6")] else [("opacity", "1")]
 showNotification :: Game -> String
 showNotification (Game p b)
   | isOver b = (show $ findWinner b) ++ " player wins!"
-  | otherwise = show p ++ "'s turn"
+  | otherwise = case p of
+      White -> "White thinking"
+      Black -> "Blacks's turn"
+      Empty -> ""
+
+  -- | otherwise = show p ++ "'s turn"
 
 union :: Event a -> Event a -> Event a
 union = unionWith const
@@ -53,20 +58,19 @@ buildGameState imgs = do
   eState <- accumE newGame moves
   stepper newGame eState
     where
-      ePlayer   = fmap concatenate . unions $ zipWith (\e s -> move s <$ e)
+      ePlayer   = fmap concatenate . unions $ zipWith (\e s -> move Black s <$ e)
                   (map UI.mousedown imgs) squares
-      eMachine  = (\s -> nextMove 4 s s) <$ (unions $ (UI.mouseup  <$> imgs))
+      eMachine  = (\s -> nextMove 3 White  s s) <$ unions (UI.mouseup  <$> imgs)
       moves     = union ePlayer eMachine 
-      -- moves     = fmap concatenate . unions $ [eMachine, ePlayer]
 
 hover :: [Element] -> Behavior Game -> UI [Behavior Bool]
 hover imgs state = mapM (stepper False) eHovers
   where
     hoverSquares = zipWith (\e s -> s <$ e) (UI.hover <$> imgs) squares
-    bLeaves      = (fmap . fmap) (const False) (UI.leave <$> imgs)
-    bLegal       = (\g -> isLegal (board g) (piece g)) <$> state
-    eHovering    = (\e -> bLegal <@> e) <$> hoverSquares
-    eHovers      = zipWith union eHovering bLeaves
+    leaves      = (fmap . fmap) (const False) (UI.leave <$> imgs)
+    legal       = (\g -> isLegal (board g) (piece g)) <$> state
+    hovering    = (\e -> legal <@> e) <$> hoverSquares
+    eHovers     = zipWith union hovering leaves
            
 ----------------------------------------------------------------------
 -- Build the GUI
@@ -107,6 +111,8 @@ setup window = void $ do
                       [ UI.h1 #+ [string "Othello"]
                       , grid (chunksOf 8 uiCells)
                       # set UI.style [("line-height", "0")]
+                      , UI.div #+ [element notification]
+                      # set UI.style [("color", "darkred")]
                       ]
                       # set UI.style colStyle
                     ]
