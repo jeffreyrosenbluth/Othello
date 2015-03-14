@@ -13,15 +13,15 @@
 
 module BitBoard where
 
-import Types hiding (Board)
+import           Types              hiding (Board)
 
-import Data.Array.Unboxed
-import Data.Bits
-import Data.Word
-import Numeric
-import Data.Char
-import Data.List
-import Data.List.Split
+import           Data.Array.Unboxed
+import           Data.Bits
+import           Data.Char
+import           Data.List
+import           Data.List.Split
+import           Data.Word
+import           Numeric
 
 type Point = (Int, Int)
 
@@ -45,7 +45,7 @@ initialBoardBlack = 0x1008000000
 initialBoardWhite = 0x810000000
 rightMask         = 0x8080808080808080
 rightMaskNot      = 0x7F7F7F7F7F7F7F7F
-leftMask          = 0x101010101010101 
+leftMask          = 0x101010101010101
 leftMaskNot       = 0xFEFEFEFEFEFEFEFE
 diagA1H8          = 0x8040201008040201
 diagH1A8          = 0x102040810204080
@@ -53,23 +53,23 @@ diagH1A8          = 0x102040810204080
 asterisk :: UArray Point Board
 asterisk =  ixmap ((1,1), (8,8)) (\(x,y) -> (y,x)) $ listArray ((1,1), (8,8))
   [
-    0x81412111090503FE, 0x02824222120A07FD, 0x0404844424150EFB, 0x08080888492A1CF7, 
-    0x10101011925438EF, 0x2020212224A870DF, 0x404142444850E0BF, 0x8182848890A0C07F, 
-    0x412111090503FE03, 0x824222120A07FD07, 0x04844424150EFB0E, 0x080888492A1CF71C, 
-    0x101011925438EF38, 0x20212224A870DF70, 0x4142444850E0BFE0, 0x82848890A0C07FC0, 
-    0x2111090503FE0305, 0x4222120A07FD070A, 0x844424150EFB0E15, 0x0888492A1CF71C2A, 
-    0x1011925438EF3854, 0x212224A870DF70A8, 0x42444850E0BFE050, 0x848890A0C07FC0A0, 
-    0x11090503FE030509, 0x22120A07FD070A12, 0x4424150EFB0E1524, 0x88492A1CF71C2A49, 
-    0x11925438EF385492, 0x2224A870DF70A824, 0x444850E0BFE05048, 0x8890A0C07FC0A090, 
-    0x090503FE03050911, 0x120A07FD070A1222, 0x24150EFB0E152444, 0x492A1CF71C2A4988, 
-    0x925438EF38549211, 0x24A870DF70A82422, 0x4850E0BFE0504844, 0x90A0C07FC0A09088, 
-    0x0503FE0305091121, 0x0A07FD070A122242, 0x150EFB0E15244484, 0x2A1CF71C2A498808, 
-    0x5438EF3854921110, 0xA870DF70A8242221, 0x50E0BFE050484442, 0xA0C07FC0A0908884, 
-    0x03FE030509112141, 0x07FD070A12224282, 0x0EFB0E1524448404, 0x1CF71C2A49880808, 
-    0x38EF385492111010, 0x70DF70A824222120, 0xE0BFE05048444241, 0xC07FC0A090888482, 
-    0xFE03050911214181, 0xFD070A1222428202, 0xFB0E152444840404, 0xF71C2A4988080808, 
+    0x81412111090503FE, 0x02824222120A07FD, 0x0404844424150EFB, 0x08080888492A1CF7,
+    0x10101011925438EF, 0x2020212224A870DF, 0x404142444850E0BF, 0x8182848890A0C07F,
+    0x412111090503FE03, 0x824222120A07FD07, 0x04844424150EFB0E, 0x080888492A1CF71C,
+    0x101011925438EF38, 0x20212224A870DF70, 0x4142444850E0BFE0, 0x82848890A0C07FC0,
+    0x2111090503FE0305, 0x4222120A07FD070A, 0x844424150EFB0E15, 0x0888492A1CF71C2A,
+    0x1011925438EF3854, 0x212224A870DF70A8, 0x42444850E0BFE050, 0x848890A0C07FC0A0,
+    0x11090503FE030509, 0x22120A07FD070A12, 0x4424150EFB0E1524, 0x88492A1CF71C2A49,
+    0x11925438EF385492, 0x2224A870DF70A824, 0x444850E0BFE05048, 0x8890A0C07FC0A090,
+    0x090503FE03050911, 0x120A07FD070A1222, 0x24150EFB0E152444, 0x492A1CF71C2A4988,
+    0x925438EF38549211, 0x24A870DF70A82422, 0x4850E0BFE0504844, 0x90A0C07FC0A09088,
+    0x0503FE0305091121, 0x0A07FD070A122242, 0x150EFB0E15244484, 0x2A1CF71C2A498808,
+    0x5438EF3854921110, 0xA870DF70A8242221, 0x50E0BFE050484442, 0xA0C07FC0A0908884,
+    0x03FE030509112141, 0x07FD070A12224282, 0x0EFB0E1524448404, 0x1CF71C2A49880808,
+    0x38EF385492111010, 0x70DF70A824222120, 0xE0BFE05048444241, 0xC07FC0A090888482,
+    0xFE03050911214181, 0xFD070A1222428202, 0xFB0E152444840404, 0xF71C2A4988080808,
     0xEF38549211101010, 0xDF70A82422212020, 0xBFE0504844424140, 0x7FC0A09088848281
-  ]                                                     
+  ]
 
 -- | Convert a 'Point' to a 'Board' with a single bit set.
 fromPoint :: Point -> Board
@@ -151,7 +151,7 @@ legalMoves p o = foldr1 (.|.) ms
 --   'col0row0 . row0col0 == A1..A8 = row0col0 . col0row0'
 --   A1..A8 to H1..A1
 col0row0 :: Board -> Board
-col0row0 x = ((x .&. leftMask) * diagA1H8) >>> 56 
+col0row0 x = ((x .&. leftMask) * diagA1H8) >>> 56
 
 -- | A1..H1 to A8..A1
 row0col0 :: Board -> Board
@@ -194,7 +194,7 @@ flipVertical x = x3
     x3 = ( x2 >>> 32)         .|. ( x2         <<< 32)
     k1 = 0x00FF00FF00FF00FF
     k2 = 0x0000FFFF0000FFFF
- 
+
 mirrorHorizontal :: Board -> Board
 mirrorHorizontal x = x3
   where
@@ -221,7 +221,7 @@ flipDiagA1H8 x = x3
 flipDiagA8H1 :: Board -> Board
 flipDiagA8H1 x = x3
   where
-   t1 = x  .^.                 (x  <<< 36) 
+   t1 = x  .^.                 (x  <<< 36)
    x1 = x  .^. (k4 .&. (t1 .^. (x  >>> 36)))
    t2 = k2 .&. (x1 .^.         (x1 <<< 18))
    x2 = x1 .^.         (t2 .^. (t2 >>> 18))
@@ -248,11 +248,11 @@ opposite Empty = Empty
 flipList :: Piece -> [Piece] -> [Piece]
 flipList p xs
   | null qs || null ps = xs
-  | head ps == p = map opposite qs ++ ps 
+  | head ps == p = map opposite qs ++ ps
   | otherwise = xs
   where
     (qs, ps) = span (== opposite p) xs
-            
+
 boardsToList :: Board -> Board -> [Piece]
 boardsToList black white = zipWith c b w
   where
@@ -298,7 +298,7 @@ diagPToLists (i, j) b w = lineToLists j b0 w0
                  then (applyN shiftW (i - j) b, applyN shiftW (i - j) w)
                  else (applyN shiftE (j - i) b, applyN shiftE (j - i) w)
     (b0, w0)   = (a1h8row0 b0', a1h8row0 w0')
-          
+
 diagNToLists :: Point -> Board -> Board -> ([Piece], [Piece])
 diagNToLists (i, j) b w = lineToLists j b0 w0
   where

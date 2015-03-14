@@ -4,7 +4,7 @@
 
 module Types where
 
-import Data.Array
+import           Data.Array
 
 data Piece = Empty | Black | White
   deriving (Show, Eq)

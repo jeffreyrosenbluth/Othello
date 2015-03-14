@@ -3,13 +3,13 @@
 --------------------------------------------------------------------------------------
 module AI where
 
-import Types
-import Game
+import           Game
+import           Types
 
-import Data.Array
-import Data.Function (on)
-import Data.List (maximumBy, minimumBy, foldl')
-import Data.Tree
+import           Data.Array
+import           Data.Function (on)
+import           Data.List     (foldl', maximumBy, minimumBy)
+import           Data.Tree
 --------------------------------------------------------------------------------------
 
 -- Order the moves tried to maximize the benefit of alpha-beta pruning.
@@ -90,10 +90,10 @@ heuristic b p =  10.0   * parity b p
               +  78.922 * mobility b p
               -- +  74.396 * stability b p
               +  10.0   * squareValues b p
-  
+
 oneIfEq :: Eq a => a -> a -> Double
 oneIfEq p q = if p == q then 1 else 0
-                
+
 -- Value for occupying more squares.
 parity :: Board -> Piece -> Double
 parity b p
@@ -127,7 +127,7 @@ squareValue b p s
   | otherwise = 0
   where
     q = b ! s
-              
+
 squareValues :: Board -> Piece -> Double
 squareValues b p = sum $ map (squareValue b p) abSquares
 
@@ -145,7 +145,7 @@ stable b p s
   | otherwise = sum $ map (oneIfEq p . (b !)) goodSqs
   where
     (i, j) = s
-    sqs = [(i + frontierX ! k, j + frontierY ! k) | k <- [1..8]] 
+    sqs = [(i + frontierX ! k, j + frontierY ! k) | k <- [1..8]]
     goodSqs = filter (\(x, y) -> x >= 1 && x <= 8 && y >= 1 && y <= 8) sqs
 
 stability :: Board -> Piece -> Double
@@ -158,7 +158,7 @@ stability b p
     infs       = map (stable b (opposite p)) abSquares
     (sup, inf) = (sum sups, sum infs)
     total      = sup + sup
-    
+
 unitVal :: Piece -> Piece -> Double
 unitVal p q
   | q == p = 1

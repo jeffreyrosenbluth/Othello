@@ -2,16 +2,16 @@
 
 module Main where
 
-import           Types
-import           Game
 import           AI
+import           Game
+import           Types
 
 import           Control.Monad
 import           Data.Array
 import           Data.List.Split
 import           System.Directory
 
-import qualified Graphics.UI.Threepenny as UI
+import qualified Graphics.UI.Threepenny      as UI
 import           Graphics.UI.Threepenny.Core hiding (on)
 
 ----------------------------------------------------------------------
@@ -48,8 +48,6 @@ showNotification (Game p b)
       Black -> "Blacks's turn"
       Empty -> ""
 
-  -- | otherwise = show p ++ "'s turn"
-
 union :: Event a -> Event a -> Event a
 union = unionWith const
 
@@ -61,7 +59,7 @@ buildGameState imgs = do
       ePlayer   = fmap concatenate . unions $ zipWith (\e s -> move Black s <$ e)
                   (map UI.mousedown imgs) squares
       eMachine  = (\s -> nextMove 3 White  s s) <$ unions (UI.mouseup  <$> imgs)
-      moves     = union ePlayer eMachine 
+      moves     = union ePlayer eMachine
 
 hover :: [Element] -> Behavior Game -> UI [Behavior Bool]
 hover imgs state = mapM (stepper False) eHovers
@@ -71,7 +69,7 @@ hover imgs state = mapM (stepper False) eHovers
     legal       = (\g -> isLegal (board g) (piece g)) <$> state
     hovering    = (\e -> legal <@> e) <$> hoverSquares
     eHovers     = zipWith union hovering leaves
-           
+
 ----------------------------------------------------------------------
 -- Build the GUI
 ----------------------------------------------------------------------
@@ -106,7 +104,7 @@ setup window = void $ do
   let bHoverStyle :: [Behavior [(String, String)]]
       bHoverStyle = (fmap . fmap) showOpacity bHovers
   zipWithM_ (\b e -> sink UI.style b e) bHoverStyle uiCells
-  
+
   getBody window #+ [ column
                       [ UI.h1 #+ [string "Othello"]
                       , grid (chunksOf 8 uiCells)

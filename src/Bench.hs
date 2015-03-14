@@ -3,9 +3,9 @@
 --------------------------------------------------------------------------------------
 module Main where
 
-import Types
-import Game
-import AI
+import           AI
+import           Game
+import           Types
 
 
 playGame ::Game -> Game

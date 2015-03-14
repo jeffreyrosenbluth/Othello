@@ -1,8 +1,8 @@
 module Game where
 
-import Types
+import           Types
 
-import Data.Array
+import           Data.Array
 
 ----------------------------------------------------------------------
 -- Game Logic
@@ -55,7 +55,7 @@ toFlip _ _ []   = []
 toFlip _ _ (_:[]) = []
 toFlip b p l
   | b ! (head l) == p || b ! (head l) == Empty = [] -- short circuit for obvious cases.
-  | zs /= [] && fst (head zs) == p = map snd ys 
+  | zs /= [] && fst (head zs) == p = map snd ys
   | otherwise = []
   where
     (ys, zs) = span ((== opposite p) . fst) $ zip (pieces b l) l
