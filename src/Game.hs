@@ -25,10 +25,8 @@ line = array ((1, 1, 1), (8, 8, 8)) [((i, j, d), line' i j d) | i <- [1..8], j <
 
 -- pieces brd = map (brd !)
 pieces :: Board -> Line -> [Piece]
-pieces brd = go
-  where
-    go [] = []
-    go (y:ys) = brd ! y : go ys
+pieces brd = map (\x -> brd ! x)
+
 {-# INLINE pieces #-}
 
 opposite :: Piece -> Piece
@@ -52,9 +50,9 @@ setSquare brd square p =
 
 toFlip :: Board -> Piece -> Line -> Line
 toFlip _ _ []   = []
-toFlip _ _ (_:[]) = []
+toFlip _ _ ([_]) = []
 toFlip b p l
-  | b ! (head l) == p || b ! (head l) == Empty = [] -- short circuit for obvious cases.
+  | b ! head l == p || b ! head l == Empty = [] -- short circuit for obvious cases.
   | zs /= [] && fst (head zs) == p = map snd ys
   | otherwise = []
   where

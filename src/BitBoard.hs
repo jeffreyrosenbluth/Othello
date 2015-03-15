@@ -317,4 +317,3 @@ testBoard
   .|. fromPoint (1,5) .|. fromPoint (5,5)
   .|. fromPoint (1,6) .|. fromPoint (5,6)
   .|. fromPoint (1,7) .|. fromPoint (2,7) .|. fromPoint (3,7) .|. fromPoint (4,7)
-

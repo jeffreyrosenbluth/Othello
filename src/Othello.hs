@@ -42,7 +42,7 @@ showOpacity b = if b then [("opacity", "0.6")] else [("opacity", "1")]
 
 showNotification :: Game -> String
 showNotification (Game p b)
-  | isOver b = (show $ findWinner b) ++ " player wins!"
+  | isOver b = show (findWinner b) ++ " player wins!"
   | otherwise = case p of
       White -> "White thinking"
       Black -> "Blacks's turn"
@@ -64,7 +64,7 @@ buildGameState imgs = do
 hover :: [Element] -> Behavior Game -> UI [Behavior Bool]
 hover imgs state = mapM (stepper False) eHovers
   where
-    hoverSquares = zipWith (\e s -> s <$ e) (UI.hover <$> imgs) squares
+    hoverSquares = zipWith (flip (<$)) (UI.hover <$> imgs) squares
     leaves      = (fmap . fmap) (const False) (UI.leave <$> imgs)
     legal       = (\g -> isLegal (board g) (piece g)) <$> state
     hovering    = (\e -> legal <@> e) <$> hoverSquares
@@ -90,7 +90,7 @@ setup window = void $ do
 
   -- Update Board
   let setSrcs :: [FilePath] -> [UI Element] -> UI ()
-      setSrcs fs es = zipWithM_ (set UI.src) fs es
+      setSrcs = zipWithM_ (set UI.src)
   onChanges bState $ \g -> setSrcs (toUrls g) uiCells
 
   -- Display the winner
@@ -103,7 +103,7 @@ setup window = void $ do
   bHovers <- hover imgs bState
   let bHoverStyle :: [Behavior [(String, String)]]
       bHoverStyle = (fmap . fmap) showOpacity bHovers
-  zipWithM_ (\b e -> sink UI.style b e) bHoverStyle uiCells
+  zipWithM_ (sink UI.style) bHoverStyle uiCells
 
   getBody window #+ [ column
                       [ UI.h1 #+ [string "Othello"]
