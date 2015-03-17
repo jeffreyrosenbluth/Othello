@@ -35,15 +35,15 @@ children g@(Game p b) = map (\s -> move p s g) (filter (isLegal b p) abSquares)
 type GameTree = Tree Game
 
 alphaBeta :: GameTree -> Double
-alphaBeta gt = alphaBeta' (-1/0) (1/0) gt
-
-alphaBeta' :: Double -> Double -> GameTree -> Double
-alphaBeta' _ _ (Node g []) = heuristic (board g) (piece g)
-alphaBeta' a b (Node _ gs) = fst $ foldl' prune (a, b) gs
+alphaBeta = alphaBeta' (-1/0) (1/0)
   where
-    prune (a', b') n
-      | b' < a' = (a', b')
-      | otherwise = (max a (- alphaBeta' (-b') (-a') n), b')
+    alphaBeta' :: Double -> Double -> GameTree -> Double
+    alphaBeta' _ _ (Node g []) = heuristic (board g) (piece g)
+    alphaBeta' a b (Node _ gs) = fst $ foldl' prune (a, b) gs
+      where
+        prune (a', b') n
+          | b' < a' = (a', b')
+          | otherwise = (max a (- alphaBeta' (-b') (-a') n), b')
 
 gameTree :: Game -> GameTree
 gameTree g = Node g (map gameTree (children g))
@@ -162,7 +162,7 @@ stability b p
 unitVal :: Piece -> Piece -> Double
 unitVal p q
   | q == p = 1
-  | q == opposite p = (-1)
+  | q == opposite p = -1
   | otherwise = 0
 
 -- Occupying a corner is very good.
@@ -196,8 +196,8 @@ mobility b p
   | inf > sup = -100 * inf / total
   | otherwise = 0
   where
-    sup  = fromIntegral . length $ (legalSquares g)
-    inf = fromIntegral . length $ (legalSquares h)
+    sup  = fromIntegral . length $ legalSquares g
+    inf = fromIntegral . length $ legalSquares h
     g = Game p b
     h = g { piece = opposite (piece g) }
     total = sup + inf
