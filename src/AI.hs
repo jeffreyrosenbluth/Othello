@@ -35,15 +35,15 @@ children g@(Game p b) = map (\s -> move p s g) (filter (isLegal b p) abSquares)
 type GameTree = Tree Game
 
 alphaBeta :: GameTree -> Double
-alphaBeta = alphaBeta' (-1/0) (1/0)
+alphaBeta = go (-1/0) (1/0)
   where
-    alphaBeta' :: Double -> Double -> GameTree -> Double
-    alphaBeta' _ _ (Node g []) = heuristic (board g) (piece g)
-    alphaBeta' a b (Node _ gs) = fst $ foldl' prune (a, b) gs
+    go :: Double -> Double -> GameTree -> Double
+    go _ _ (Node g []) = heuristic (board g) (piece g)
+    go a b (Node _ gs) = fst $ foldl' prune (a, b) gs
       where
         prune (a', b') n
           | b' < a' = (a', b')
-          | otherwise = (max a (- alphaBeta' (-b') (-a') n), b')
+          | otherwise = (max a (- go (-b') (-a') n), b')
 
 gameTree :: Game -> GameTree
 gameTree g = Node g (map gameTree (children g))
